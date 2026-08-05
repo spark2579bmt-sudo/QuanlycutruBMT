@@ -138,7 +138,7 @@
 
         /* CARD LIST */
         .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; }
-        .chuho-card { background: white; border-radius: var(--radius); padding: 15px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: space-between; transition: var(--transition); border-left: 4px solid var(--primary-color); }
+        .chuho-card { background: white; border-radius: var(--radius); padding: 15px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: space-between; transition: var(--transition); border-left: 4px solid var(--primary-color); cursor: pointer; }
         .chuho-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
         .card-top { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
         .avatar-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); cursor: pointer; }
@@ -354,16 +354,14 @@
 
     </main>
 
-    <!-- MODAL FORM THỐNG KÊ CHI TIẾT (CÓ CỘT HỘ, DÂN TỘC, TÔN GIÁO) -->
+    <!-- MODAL FORM THỐNG KÊ CHI TIẾT -->
     <div id="modalStat" class="modal">
         <div class="modal-content modal-lg">
             <div class="modal-header">
                 <h2><i class="fa-solid fa-chart-pie"></i> Báo Cáo Thống Kê Tổng Hợp Cư Trú</h2>
                 <span class="close-modal" onclick="closeModal('modalStat')">&times;</span>
             </div>
-            <div class="modal-body" id="statModalBody">
-                <!-- Nội dung thống kê chi tiết render bằng JS -->
-            </div>
+            <div class="modal-body" id="statModalBody"></div>
         </div>
     </div>
 
@@ -1026,7 +1024,6 @@
             return str;
         }
 
-        // Hàm tính tuổi chính xác từ chuỗi Ngày sinh (DD/MM/YYYY hoặc YYYY)
         function calculateAge(dobStr) {
             if (!dobStr) return null;
             let parts = dobStr.split('/');
@@ -1211,9 +1208,7 @@
             }
         }
 
-        /* XỬ LÝ FORM THỐNG KÊ CHI TIẾT (CÓ CỘT HỘ, DÂN TỘC, TÔN GIÁO) */
         function openStatModal() {
-            // 1. Phân bổ theo Tổ Dân Phố (Có số hộ, tổng nhân khẩu, tổng nữ, trên 14 tuổi)
             const tdpMap = {};
             dbNhanKhau.forEach(item => {
                 const tdp = getTDP(item) || "Chưa xác định";
@@ -1221,15 +1216,11 @@
                     tdpMap[tdp] = { hoSet: new Set(), totalNhanKhau: 0, totalNu: 0, totalTren14: 0 };
                 }
                 tdpMap[tdp].totalNhanKhau++;
-                
-                // Đếm hộ: dựa vào danh sách chủ hộ hoặc SHK
                 if (isChuHo(item.QHVoiCH)) {
                     tdpMap[tdp].hoSet.add(item.SHK || item.HoTen);
                 }
-
                 const isNu = item.GioiTinh && (item.GioiTinh.toString().trim().toLowerCase() === "nữ" || item.GioiTinh.toString().trim().toLowerCase() === "nu");
                 if (isNu) tdpMap[tdp].totalNu++;
-
                 const age = calculateAge(formatBirthDate(item.NamSinh));
                 if (age !== null && age > 14) {
                     tdpMap[tdp].totalTren14++;
@@ -1242,7 +1233,6 @@
 
             for (let tdp in tdpMap) {
                 const data = tdpMap[tdp];
-                // Số hộ ước tính bằng số chủ hộ trong TDP hoặc số lượng SHK khác nhau
                 const countHo = data.hoSet.size > 0 ? data.hoSet.size : Math.ceil(data.totalNhanKhau / 3); 
                 sumHo += countHo;
                 sumNK += data.totalNhanKhau;
@@ -1261,7 +1251,6 @@
                 `;
             }
 
-            // 2. Thống kê theo Dân Tộc
             const danTocMap = {};
             dbNhanKhau.forEach(item => {
                 const dt = (item.DanToc && item.DanToc.toString().trim() !== "") ? item.DanToc.toString().trim() : "Chưa xác định";
@@ -1295,7 +1284,6 @@
                 `;
             }
 
-            // 3. Thống kê theo Tôn Giáo
             const tonGiaoMap = {};
             dbNhanKhau.forEach(item => {
                 const tg = (item.TonGiao && item.TonGiao.toString().trim() !== "") ? item.TonGiao.toString().trim() : "Không / Chưa xác định";
@@ -1331,7 +1319,6 @@
 
             document.getElementById("statModalBody").innerHTML = `
                 <div style="font-size: 0.9rem; line-height: 1.5;">
-                    
                     <div class="stat-section-title"><i class="fa-solid fa-building-flag"></i> 1. Phân bổ theo Tổ Dân Phố (Có cột số hộ)</div>
                     <div class="table-responsive">
                         <table class="custom-table">
@@ -1395,7 +1382,6 @@
                             </tbody>
                         </table>
                     </div>
-
                 </div>
             `;
             document.getElementById("modalStat").style.display = "block";
@@ -1757,20 +1743,24 @@
                 }
             };
 
+            // TÍNH NĂNG NHẬP EXCEL TỐI ƯU CHO FILE LỚN (≥3MB)
             document.getElementById("excelFileInput").onchange = function(e) {
                 const file = e.target.files[0];
                 if (!file) return;
+
+                showToast("Đang đọc file Excel dung lượng lớn, vui lòng đợi...");
 
                 const reader = new FileReader();
                 reader.onload = function(evt) {
                     try {
                         const data = new Uint8Array(evt.target.result);
-                        const workbook = XLSX.read(data, { type: 'array', cellDates: false, raw: false, defval: "" });
+                        // Cấu hình tối ưu cho file nặng: cellDates: false, raw: true để giảm tải bộ nhớ
+                        const workbook = XLSX.read(data, { type: 'array', cellDates: false, raw: true, defval: "" });
                         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { raw: false, defval: "" });
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { raw: true, defval: "" });
 
                         if (jsonData && jsonData.length > 0) {
-                            dbNhanKhau = jsonData.map((row, idx) => {
+                            const parsedData = jsonData.map((row, idx) => {
                                 const getVal = (...keys) => {
                                     for (let k of keys) {
                                         for (let rowKey in row) {
@@ -1806,14 +1796,41 @@
                                 };
                             });
 
+                            const isOverwriteAll = confirm(`Đã đọc thành công ${parsedData.length} dòng dữ liệu.\nBạn muốn GHI ĐÈ TOÀN BỘ dữ liệu hiện tại không?\n(Bấm [OK] để ghi đè | Bấm [Cancel] để Gộp thêm/Cập nhật thông tin)`);
+                            
+                            if (isOverwriteAll) {
+                                dbNhanKhau = parsedData;
+                                showToast("Đã ghi đè toàn bộ dữ liệu mới từ Excel!");
+                            } else {
+                                let countUpdated = 0;
+                                let countAdded = 0;
+
+                                parsedData.forEach(newItem => {
+                                    if (newItem.CanCuoc) {
+                                        const existingIndex = dbNhanKhau.findIndex(x => x.CanCuoc && x.CanCuoc.toString().trim() === newItem.CanCuoc.toString().trim());
+                                        if (existingIndex >= 0) {
+                                            dbNhanKhau[existingIndex] = newItem; 
+                                            countUpdated++;
+                                        } else {
+                                            dbNhanKhau.push(newItem);
+                                            countAdded++;
+                                        }
+                                    } else {
+                                        dbNhanKhau.push(newItem);
+                                        countAdded++;
+                                    }
+                                });
+                                showToast(`Đã cập nhật ${countUpdated} người và thêm mới ${countAdded} người!`);
+                            }
+
                             saveToLocalStorage();
                             renderApp();
-                            showToast("Nhập dữ liệu Excel thành công!");
                         }
                     } catch (err) {
                         console.error(err);
-                        alert("Không thể đọc file Excel này!");
+                        alert("Không thể đọc file Excel này do lỗi định dạng!");
                     }
+                    e.target.value = "";
                 };
                 reader.readAsArrayBuffer(file);
             };
