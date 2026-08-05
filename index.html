@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Quản lý cư trú - Thường trú - Công an phường Buôn Ma Thuột</title>
+    <title>Quản lý cư trú - Thường trú - TỔ DÂN PHỐ 6 THÀNH CÔNG - Công an phường Buôn Ma Thuột</title>
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#1976D2">
@@ -237,7 +237,7 @@
     <header class="app-header">
         <div class="header-content">
             <div class="header-title-box">
-                <h1>Quản lý cư trú - Thường trú</h1>
+                <h1>Quản lý cư trú - Thường trú - Tổ dân phố 6 Thành Công</h1>
                 <p>Công an phường Buôn Ma Thuột</p>
             </div>
             <div class="header-actions">
@@ -358,7 +358,7 @@
     <div id="modalStat" class="modal">
         <div class="modal-content modal-lg">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-chart-pie"></i> Báo Cáo Thống Kê Tổng Hợp Cư Trú</h2>
+                <h2><i class="fa-solid fa-chart-pie"></i> Báo Cáo Thống Kê Tổng Hợp Cư Trú - Tổ Dân Phố 6 Thành Công</h2>
                 <span class="close-modal" onclick="closeModal('modalStat')">&times;</span>
             </div>
             <div class="modal-body" id="statModalBody"></div>
@@ -560,8 +560,8 @@
                 SoNha: "12A",
                 NoiThuongTru: "Phường Buôn Ma Thuột, tỉnh Đắk Lắk",
                 NoiCuTru: "Số 12A Phường Buôn Ma Thuột, tỉnh Đắk Lắk",
-                TDP: "TDP 05",
-                ToDanPho: "TDP 05",
+                TDP: "TDP 06",
+                ToDanPho: "TDP 06",
                 TenCha: "Nguyễn Văn Bình",
                 TenMe: "Lê Thị Cúc",
                 GhiChu: "Chủ hộ gia đình",
@@ -1754,7 +1754,6 @@
                 reader.onload = function(evt) {
                     try {
                         const data = new Uint8Array(evt.target.result);
-                        // Cấu hình tối ưu cho file nặng: cellDates: false, raw: true để giảm tải bộ nhớ
                         const workbook = XLSX.read(data, { type: 'array', cellDates: false, raw: true, defval: "" });
                         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                         const jsonData = XLSX.utils.sheet_to_json(firstSheet, { raw: true, defval: "" });
